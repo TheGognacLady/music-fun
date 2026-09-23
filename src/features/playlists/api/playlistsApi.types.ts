@@ -11,38 +11,6 @@ export type PlaylistAttributes = z.infer<typeof playlistAttributesSchema>
 export type PlaylistData = z.infer<typeof playlistDataSchema>
 export type PlaylistsResponse = z.infer<typeof playlistsResponseSchema>
 
-//
-// export type PlaylistsResponse = {
-//     data: PlaylistData[]
-//     meta: PlaylistMeta
-// }
-//
-// export type PlaylistData = {
-//     id: string
-//     type: 'playlists'
-//     attributes: PlaylistAttributes
-// }
-//
-// export type PlaylistMeta = {
-//     page: number
-//     pageSize: number
-//     totalCount: number
-//     pagesCount: number
-// }
-//
-// export type PlaylistAttributes = {
-//     title: string
-//     description: string
-//     addedAt: string
-//     updatedAt: string
-//     order: number
-//     dislikesCount: number
-//     likesCount: number
-//     tags: Tag[]
-//     images: Images
-//     user: User
-//     currentUserReaction: CurrentUserReaction
-// }
 
 // Arguments
 export type FetchPlaylistsArgs = {
@@ -79,15 +47,19 @@ export type UpdatePlaylistArgs = {
     }
 }
 
+//WebSockets Events
 
+export type PlaylistCreatedEvent = {
+    type: 'tracks.playlist-created'
+    payload: {
+        data: PlaylistData
+    }
+}
 
-//     "data": {
-//     "type": "playlists",
-//         "attributes": {
-//         "title": "string",
-//             "description": "Cool playlist",
-//             "tagIds": [
-//             "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-//         ]
-//     }
-// }
+export type PlaylistUpdatedEvent = {
+    type: 'tracks.playlist-updated'
+    payload: {
+        data: PlaylistData
+    }
+}
+
