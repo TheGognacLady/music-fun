@@ -28,3 +28,16 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Playwright: credentials and artifacts
+/playwright/.auth/
+/playwright-report/
+/test-results/
+/blob-report/
+
+# Local deployment metadata and optional test artifacts
+/.vercel/
+/coverage/
+/playwright/screenshots/
+/playwright/videos/
+/playwright/traces/

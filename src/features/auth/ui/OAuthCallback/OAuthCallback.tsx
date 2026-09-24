@@ -1,16 +1,15 @@
-import {useEffect} from "react";
+import { useEffect } from 'react'
 
 export const OAuthCallback = () => {
-    useEffect(()=> {
+  useEffect(() => {
+    const url = new URL(window.location.href)
 
-        const url = new URL(window.location.href)
+    const code = url.searchParams.get('code')
 
-        const code = url.searchParams.get("code")
-
-        if(code && window.opener) {
-            window.opener.postMessage({code}, '*')
-        }
-        window.close()
-    }, [])
-    return <p>Logging you in...</p>
+    if (code && window.opener) {
+      window.opener.postMessage({ code }, window.location.origin)
+    }
+    window.close()
+  }, [])
+  return <p>Logging you in...</p>
 }
