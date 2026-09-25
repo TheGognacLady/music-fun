@@ -1,135 +1,156 @@
 # Music Fun
 
-Music Fun is a frontend portfolio project for browsing music tracks and managing
-playlists through the external Music Fun API.
+Music Fun is a frontend application for browsing music tracks and creating and managing playlists.
+
+The project demonstrates authentication flows, server-state management, optimistic UI updates, API response validation, real-time updates, and automated testing in a modern React application.
 
 ## Features
 
-- Playlist browsing, debounced title search and pagination.
-- Profile page with playlist creation, editing, deletion and cover management.
-- Track browsing with cursor pagination, infinite scrolling and audio playback.
-- OAuth popup sign-in, access/refresh token handling and logout.
-- RTK Query caching and optimistic playlist updates with rollback on failure.
-- Zod validation of API responses with user-facing error notifications.
-- Socket.IO playlist-created/updated subscriptions that refresh cached lists
-  with their existing filters and pagination.
+- Browse playlists with debounced search and pagination
+- Create, edit and delete playlists
+- Upload and manage playlist covers
+- Browse music tracks with cursor pagination and infinite scrolling
+- Play audio tracks
+- OAuth authentication via popup
+- Access and refresh token handling
+- Automatic token refresh and request retry
+- RTK Query caching and cache invalidation
+- Optimistic playlist updates with rollback on failed requests
+- API response validation with Zod
+- User-facing API error handling
+- Real-time playlist updates with Socket.IO
+- Responsive frontend interface
 
-The backend and identity provider are external services; this repository does
-not contain a backend or a publicly reusable API credential.
+## Tech Stack
 
-## Stack
+- React 19
+- TypeScript
+- Vite
+- Redux Toolkit
+- RTK Query
+- React Router
+- React Hook Form
+- Zod
+- Socket.IO
+- CSS Modules
+- Vitest
+- Playwright
+- ESLint
+- pnpm
 
-React 19, TypeScript, Vite, Redux Toolkit / RTK Query, React Router,
-React Hook Form, Zod, Socket.IO, CSS Modules and Vitest.
+## Architecture Highlights
 
-## Local development
+### Authentication
 
-Use **Node.js 24.x** (see `.nvmrc`) and the pnpm version in `packageManager`.
+The application implements an OAuth popup authentication flow.
 
-```sh
+After authentication, access and refresh tokens are handled by the client. When an authorized request receives a `401` response, the application attempts to refresh the access token and retry the original request.
+
+Concurrent unauthorized requests wait for the same refresh process instead of starting multiple refresh requests.
+
+### Server State
+
+RTK Query is used for API communication, caching and synchronization of server state.
+
+Playlist mutations use optimistic updates so the interface responds immediately. If a mutation fails, affected cache entries are rolled back.
+
+### API Validation
+
+Zod schemas validate API responses before invalid data reaches the application state.
+
+Validation failures are converted into controlled application errors and displayed through the normal notification flow.
+
+### Real-Time Updates
+
+Socket.IO subscriptions react to playlist creation and update events.
+
+Relevant playlist queries are refreshed while preserving their current filters and pagination parameters.
+
+## Testing
+
+The project contains five focused Vitest tests covering important application behavior:
+
+1. Successful `401 → token refresh → request retry`
+2. Handling `403` without unnecessary refresh or logout
+3. Optimistic playlist updates across multiple RTK Query cache entries
+4. Rollback of optimistic changes after a failed mutation
+5. Rejection and controlled handling of invalid API responses with Zod
+
+The tests use synthetic data and an isolated in-memory store. They do not contact the real backend or require OAuth credentials.
+
+Run the tests with:
+
+```bash
+pnpm test:unit
+```
+
+Playwright infrastructure is also retained in the project for further E2E testing and study. It is isolated from the normal production build and unit-test workflow.
+
+## Local Development
+
+The project uses Node.js 24.x and pnpm.
+
+Install dependencies:
+
+```bash
 pnpm install --frozen-lockfile
 ```
 
-Copy `.env.example` to ignored `.env.local` and fill the values for your own
-authorized backend account. Do not commit credentials. For local OAuth,
-`VITE_DOMAIN_ADDRESS` must match the actual browser origin
-(`http://127.0.0.1:3000`, not a different localhost hostname).
+Copy `.env.example` to `.env.local` and configure the environment variables for an authorized Music Fun API account.
 
-```sh
+For local OAuth, `VITE_DOMAIN_ADDRESS` must match the browser origin:
+
+```text
+http://127.0.0.1:3000
+```
+
+Start the development server:
+
+```bash
 pnpm dev
 ```
 
-The application runs at http://127.0.0.1:3000.
-OAuth requires the backend/provider to allow the application's callback URL.
+The application will be available at:
 
-## Unit and integration tests
-
-```sh
-pnpm test:unit
-pnpm test:unit:watch
+```text
+http://127.0.0.1:3000
 ```
 
-Exactly five tests cover successful token refresh, preserving a session after
-403, optimistic updates across multiple RTK Query caches, rollback on mutation
-failure, and handling invalid API data through Zod.
+## Environment Variables
 
-These tests use an in-memory store and synthetic data. They do not load env
-files, use OAuth or contact the backend. HTTP transport and Socket.IO are
-mocked; unexpected network attempts fail the tests.
+The application uses the following environment variables:
 
-See [unit test details](src/tests/unit/README.md).
+```text
+VITE_BASE_URL
+VITE_API_KEY
+VITE_SOCKET_URL
+VITE_DOMAIN_ADDRESS
+```
 
-## Local quality checks
+`VITE_API_KEY` is optional in the frontend configuration and is added to requests only when provided.
 
-```sh
-pnpm test:unit
-pnpm exec tsc -p tsconfig.app.json --noEmit
-pnpm exec tsc -p src/tests/unit/tsconfig.json --noEmit
-pnpm typecheck:e2e
-pnpm lint
+Do not commit `.env.local`, authentication tokens, OAuth state, Playwright authentication state, or other credentials.
+
+## Production Build
+
+Create a production build with:
+
+```bash
 pnpm build
 ```
 
-`pnpm build` typechecks production/config code and writes the frontend to
-`dist/`. It does not execute tests or OAuth. Unit and E2E TypeScript checks
-remain separate. `pnpm preview` serves a local production build.
+The generated frontend is written to `dist/`.
 
-## Playwright: retained experimental work
+The production build includes TypeScript checking and the Vite build process.
 
-A Chromium playlist lifecycle scenario is retained for future study.
-**A successful end-to-end run against the real backend has not been established.**
-Previous runs encountered transport and CREATE-response timeouts.
+## Live Demo
 
-It is **not part of normal production verification or deployment**. Do not run
-it automatically in CI: it requires manual OAuth and performs real playlist
-mutations. Its safety guard restricts changes and cleanup to a confirmed
-CREATE ID; without that ID it leaves a diagnostic journal rather than deleting
-by name. Cleanup is best effort.
+A public live demo is currently not provided because the application relies on an external educational Music Fun API with domain restrictions for public deployments.
 
-See [E2E setup and limitations](src/tests/e2e/README.md). Auth state, reports,
-traces and results must remain local and must never be force-added to Git.
+The application runs locally with an authorized API configuration. The external backend and identity provider are not part of this repository.
 
-## Vercel deployment
+## Project Status
 
-- Framework: Vite; Node.js: 24.x.
-- Enable Vercel Corepack with project variable `ENABLE_EXPERIMENTAL_COREPACK=1`
-  so the pinned `pnpm@11.23.0` is used, rather than an inferred older pnpm.
-- Install: `corepack pnpm install --frozen-lockfile`.
-- Build: `pnpm build`; output: `dist`.
-- `vercel.json` provides SPA fallback for direct visits and reloads on routes
-  such as `/profile`, `/tracks` and `/oauth/callback`.
-- Configure the four application variables below in the appropriate Vercel
-  environment **before building**; redeploy after changing them.
-- Set the deployed origin as `VITE_DOMAIN_ADDRESS`, without a trailing slash.
-  The backend/provider must accept `<deployed-origin>/oauth/callback`;
-  backend CORS/allowed-domain and Socket.IO origin policies may also need it.
-- Preview deployments have different origins. Do not assume production OAuth
-  settings automatically authorize every preview URL.
+The core frontend functionality is implemented and the production build and automated Vitest tests pass.
 
-| Variable            | Purpose                                                      |
-| ------------------- | ------------------------------------------------------------ |
-| VITE_BASE_URL       | Absolute external API base URL, including API version/path   |
-| VITE_API_KEY        | API credential required by the current browser client        |
-| VITE_SOCKET_URL     | External Socket.IO server origin; socket path is /api/1.0/ws |
-| VITE_DOMAIN_ADDRESS | Exact frontend origin used by OAuth                          |
-
-**Security prerequisite:** Vite embeds referenced `VITE_*` values into the
-public browser bundle. Marking a Vercel variable sensitive does not hide it
-from website visitors. The current client sends `VITE_API_KEY` from the
-browser. Before public deployment, confirm with the API owner that this key is
-intended and permitted for public browser use. If it must stay secret, public
-deployment is blocked until a separately designed server-side solution exists.
-Never use a password, bearer token or refresh token as a Vite variable.
-
-`E2E_USER_ID` and Playwright auth state are only for local E2E work and are not
-needed on Vercel. Never publish the local `dist` manually with an unapproved key.
-
-References: [Vite environment variables](https://vite.dev/guide/env-and-mode),
-[Vite on Vercel](https://vercel.com/docs/frameworks/frontend/vite),
-[Vercel Corepack configuration](https://vercel.com/docs/builds/configure-a-build#corepack).
-
-## Current limits
-
-The profile currently shows the API's first playlist page without its own
-pagination controls. Real-backend E2E is experimental. Unit tests validate the
-five listed behaviors, not the entire application or external API availability.
+The project is maintained as a portfolio and learning project focused on modern React architecture, authentication, server-state management, API integration, real-time updates and testing.
