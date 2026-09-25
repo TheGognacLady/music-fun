@@ -18,12 +18,7 @@ export const Login = () => {
 
     const receiveMessage = (event: MessageEvent) => {
 
-      console.log('OAuth message received', {
-        eventOrigin: event.origin,
-        expectedOrigin: import.meta.env.VITE_DOMAIN_ADDRESS,
-        sourceMatchesPopup: event.source === popup,
-        data: event.data,
-      })
+
 
       if (
         event.origin !== import.meta.env.VITE_DOMAIN_ADDRESS ||
